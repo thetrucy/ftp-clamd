@@ -350,7 +350,7 @@ class FTPClient:
             
             progress_callback = self.ProgressCallback(file_size, "Download")
             progress_callback.transferred = file_size
-            FTPClient.show_progress_bar(progress_callback.transferred, file_size, "Upload")
+            FTPClient.show_progress_bar(progress_callback.transferred, file_size, "Download")
                     
             print(f"✅ Downloaded: {remote_path} to {local_path}")
             return True
