@@ -3,6 +3,7 @@ import socket
 import shlex
 import sys
 import time
+import threading
 
 from my_ftp import FTPClient as MyFTPClient, FTPError, FTPConnectError, FTPPermError, FTPTempError
 
@@ -64,6 +65,23 @@ class FTPClient:
         else:
             print("⚠️ Not connected to any FTP server.")
 
+    @staticmethod
+    def show_progress_bar(current, total, prefix="Progress", length=40):
+        """Display a simple progress bar."""
+        if total == 0:
+            percent = 100
+        else:
+            percent = (current / total) * 100
+        
+        filled_length = int(length * current // total) if total > 0 else length
+        bar = '█' * filled_length + '-' * (length - filled_length)
+        
+        sys.stdout.write(f'\r{prefix}: |{bar}| {percent:.1f}% ({current}/{total})')
+        sys.stdout.flush()
+        
+        if current >= total:
+            print()
+
     # --- ClamAV Integration ---
     def scan_file_with_clamav(self, file_path):
         """Scan file with ClamAV agent before upload."""
@@ -87,12 +105,15 @@ class FTPClient:
                 s.sendall(file_size.to_bytes(8, byteorder='big'))
 
                 # Send file data
+                sent_bytes = 0
                 with open(file_path, "rb") as f:
                     while True:
                         data = f.read(BUFFER_SIZE)
                         if not data:
                             break
                         s.sendall(data)
+                        sent_bytes += len(data)
+                        #FTPClient.show_progress_bar(sent_bytes, file_size, "Scan")
                 
                 # Receive scan result
                 result = s.recv(1024).decode('utf-8').strip()
@@ -136,6 +157,7 @@ class FTPClient:
             return
             
         print(f"✅ ClamAV Agent configured to: {CLAMAV_AGENT_HOST}:{CLAMAV_AGENT_PORT}")
+
 
     # --- File Operations ---
     def list_files(self):
@@ -259,6 +281,17 @@ class FTPClient:
             print(f"❌ Error renaming '{from_path}' to '{to_path}': {e}")
             return False
 
+    class ProgressCallback:
+        """Callback class to track upload/download progress."""
+        def __init__(self, file_size, operation="Transfer"):
+            self.file_size = file_size
+            self.transferred = 0
+            self.operation = operation
+            
+        def __call__(self, data):
+            self.transferred += len(data)
+            FTPClient.show_progress_bar(self.transferred, self.file_size, self.operation)
+
     # --- Transfer Operations ---
     def upload_file(self, local_path, remote_path=None):
         """Upload single file with ClamAV scanning."""
@@ -280,9 +313,14 @@ class FTPClient:
         try:
             if not remote_path:
                 remote_path = os.path.basename(local_path)
-                
+            file_size = os.path.getsize(local_path)
+            # Khởi tạo callback để theo dõi tiến trình
+            progress_callback = self.ProgressCallback(file_size, "Upload")
+
             print(f"📤 Uploading '{local_path}' to server as '{remote_path}'...")
-            self.ftp.stor(local_path, remote_path, binary=(self.transfer_type == 'binary'))
+            self.ftp.stor(local_path, remote_path, binary=(self.transfer_type == 'binary')
+                          , callback = progress_callback)
+
             print("✅ Upload successful.")
             return True
             
@@ -300,13 +338,19 @@ class FTPClient:
             if not local_path:
                 local_path = os.path.basename(remote_path)
                 
-            print(f"⬇️ Downloading '{remote_path}' from server...")
-            self.ftp.retr(remote_path, local_path, binary=(self.transfer_type == 'binary'))
+            file_size = self.ftp.size(remote_path)
+
+            progress_callback = self.ProgressCallback(file_size, "Download")
+
+            print(f"⬇️ Downloading '{remote_path}' from server...")            
+            self.ftp.retr(remote_path, local_path, binary=(self.transfer_type == 'binary')
+                          , callback = progress_callback)
+                    
             print(f"✅ Downloaded: {remote_path} to {local_path}")
             return True
             
         except FTPError as e:
-            print(f"❌ Download failed: {e}")
+            print(f"\n❌ Download failed: {e}")
             return False
 
     def upload_files(self, local_dir=None):
@@ -444,17 +488,24 @@ class FTPClient:
         original_server_dir = self.ftp.pwd()
         print(f"Files will be saved to '{os.path.abspath(local_destination)}'")
 
+        success = True
+
         try:
             self.download_directory_recursively(remote_target, local_destination)
         except Exception as e:
             print(f"❌ A critical error occurred during download: {e}")
+            success = False
         finally:
             try:
                 self.ftp.cwd(original_server_dir)
             except FTPError as e:
                 print(f"⚠️ Warning: Could not return to original server directory '{original_server_dir}': {e}")
+                success = False
                 
-        print("\n✅ Download finished.")
+        if success:
+            print("\n✅ Download finished.")
+        else:
+            print("\n⚠️ Download completed with errors.")
 
     # --- Settings and Configuration ---
     def toggle_passive_mode(self, mode=None):
