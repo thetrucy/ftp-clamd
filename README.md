@@ -1,9 +1,3 @@
-Of course\! I can definitely help improve your `README.md` file. A good README is crucial for any project. I've analyzed your Python scripts to create a more comprehensive and user-friendly guide.
-
-Here is a revised version of your README file. I've added more detail to each section as you requested, including prerequisites, a better-structured command reference with examples, and more thorough setup instructions.
-
------
-
 # ftp-clamd
 
 A Python-based FTP client with integrated ClamAV anti-virus scanning. This tool ensures that all files are scanned for viruses by a ClamAV agent before they are uploaded to the FTP server, providing an extra layer of security for your file transfers.
