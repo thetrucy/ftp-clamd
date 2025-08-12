@@ -13,8 +13,8 @@ It consists of two main components:
 
   * [Prerequisites](#prerequisites)
   * [Setup and Configuration](#setup-and-configuration)
-      * [1. FTP Server Setup](#-ftp-server-setup)
-      * [2. ClamAV Installation and Configuration](#-clamav-installation-and-configuration)
+      * [1. FTP Server Setup](#1-ftp-server-setup)
+      * [2. ClamAV Installation and Configuration](#2-clamav-installation-and-configuration)
   * [How to Run](#how-to-run)
   * [Usage and Commands](#usage-and-commands)
 
