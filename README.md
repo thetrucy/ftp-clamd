@@ -11,12 +11,12 @@ It consists of two main components:
 
 ## Table of Contents
 
-  * [Prerequisites](#-prerequisites)
-  * [Setup and Configuration](#-setup-and-configuration)
-      * [1. FTP Server Setup](#-ftp-server-setup)
-      * [2. ClamAV Installation and Configuration](#-clamav-installation-and-configuration)
-  * [How to Run](#-how-to-run)
-  * [Usage and Commands](#-usage-and-commands)
+  * [Prerequisites](#prerequisites)
+  * [Setup and Configuration](#setup-and-configuration)
+      * [1. FTP Server Setup](#ftp-server-setup)
+      * [2. ClamAV Installation and Configuration](#clamav-installation-and-configuration)
+  * [How to Run](#how-to-run)
+  * [Usage and Commands](#usage-and-commands)
 
 -----
 
@@ -131,7 +131,7 @@ The `clamav_agent.py` script requires `clamscan` (on Linux) or `clamscan.exe` (o
 
 -----
 
-## 🖥️ Usage and Commands
+## Usage and Commands
 
 The client works like a standard command-line FTP program.
 
