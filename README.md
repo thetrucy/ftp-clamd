@@ -9,7 +9,7 @@ It consists of two main components:
 
 -----
 
-## 📜 Table of Contents
+## Table of Contents
 
   * [Prerequisites](#-prerequisites)
   * [Setup and Configuration](#-setup-and-configuration)
@@ -20,7 +20,7 @@ It consists of two main components:
 
 -----
 
-## ⚙️ Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
@@ -30,7 +30,7 @@ Before you begin, ensure you have the following installed:
 
 -----
 
-## 🛠️ Setup and Configuration
+## Setup and Configuration
 
 ### 1\. FTP Server Setup
 
@@ -102,7 +102,7 @@ The `clamav_agent.py` script requires `clamscan` (on Linux) or `clamscan.exe` (o
 
 -----
 
-## ▶️ How to Run
+## How to Run
 
 1.  **Clone the Repository:**
 
