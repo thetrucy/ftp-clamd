@@ -11,12 +11,12 @@ It consists of two main components:
 
 ## 📜 Table of Contents
 
-  * [Prerequisites](https://www.google.com/search?q=%23-prerequisites)
-  * [Setup and Configuration](https://www.google.com/search?q=%23-setup-and-configuration)
-      * [1. FTP Server Setup](https://www.google.com/search?q=%231-ftp-server-setup)
-      * [2. ClamAV Installation and Configuration](https://www.google.com/search?q=%232-clamav-installation-and-configuration)
-  * [How to Run](https://www.google.com/search?q=%23-how-to-run)
-  * [Usage and Commands](https://www.google.com/search?q=%23-usage-and-commands)
+  * [Prerequisites](#-prerequisites)
+  * [Setup and Configuration](#-setup-and-configuration)
+      * [1. FTP Server Setup](#-ftp-server-setup)
+      * [2. ClamAV Installation and Configuration](#-clamav-installation-and-configuration)
+  * [How to Run](#-how-to-run)
+  * [Usage and Commands](#-usage-and-commands)
 
 -----
 
