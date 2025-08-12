@@ -40,10 +40,14 @@ You need a functional FTP server. Below are basic setup guides for common FTP se
 
 `vsftpd` (Very Secure FTP Daemon) is a popular choice for Linux systems.
 
+Set up tutorial [VSFTPD setup](https://youtu.be/ISVyGxYfAGg?si=ggvcTokEHsi4RnYv)
+
+Below is a brief summary:
+
 1.  **Install vsftpd:**
     ```bash
-    sudo apt-get update
-    sudo apt-get install vsftpd
+    sudo apt update
+    sudo apt install vsftpd
     ```
 2.  **Configure vsftpd:**
       * Open the configuration file: `sudo nano /etc/vsftpd.conf`.
