@@ -1,4 +1,4 @@
-# ftp-clamd
+# Secure FTP via Clamscan
 
 A Python-based FTP client with integrated ClamAV anti-virus scanning. This tool ensures that all files are scanned for viruses by a ClamAV agent before they are uploaded to the FTP server, providing an extra layer of security for your file transfers.
 
@@ -58,13 +58,15 @@ Below is a brief summary:
         write_enable=YES
         chroot_local_user=YES
         ```
-      * To allow users to upload, you might need to add `allow_writeable_chroot=YES` at the end of the file.
 3.  **Create an FTP User (Optional):** You can use an existing user or create a new one for FTP access.
 4.  **Restart the Service:**
     ```bash
     sudo systemctl restart vsftpd
     ```
-
+5. **Check if the Service works**
+   ```bash
+    sudo systemctl status vsftpd
+    ```
 #### **Windows (FileZilla Server)**
 
 FileZilla provides a straightforward GUI-based FTP server for Windows.
@@ -78,13 +80,13 @@ FileZilla provides a straightforward GUI-based FTP server for Windows.
 
 ### 2\. ClamAV Installation and Configuration
 
-The `clamav_agent.py` script requires `clamscan` (on Linux) or `clamscan.exe` (on Windows) to be accessible.
+The `clamav_agent.py` script requires `clamdscan` (on Linux) or `clamscan.exe` (on Windows) to be accessible.
 
 #### **Linux (clamav)**
 
 1.  **Install ClamAV:**
     ```bash
-    sudo apt-get install clamav clamav-daemon
+    sudo apt install clamav clamav-daemon
     ```
 2.  **Update Virus Definitions:** Run `freshclam` to download the latest virus signatures. This may require you to stop the daemon first.
     ```bash
@@ -107,7 +109,7 @@ The `clamav_agent.py` script requires `clamscan` (on Linux) or `clamscan.exe` (o
 1.  **Clone the Repository:**
 
     ```bash
-    git clone <your-repository-link>
+    git clone (https://github.com/thetrucy/ftp-clamd)
     cd ftp-clamd
     ```
 
@@ -127,7 +129,14 @@ The `clamav_agent.py` script requires `clamscan` (on Linux) or `clamscan.exe` (o
     python ftp_client.py
     ```
 
-    You will be greeted with the client's welcome message and a command prompt.
+    You will be greeted with the client's welcome message and a command prompt:
+
+    ```bash
+    🚀 FTP Client with ClamAV Integration 🚀
+    🧠 Type 'help' or '?' for available commands.
+    💡 Use 'open <host> <port> <username> <password>' to connect.
+    ftp>
+    ```
 
 -----
 
