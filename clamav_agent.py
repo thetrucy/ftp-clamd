@@ -1,3 +1,8 @@
+# clamav_agent.py
+# This script acts as a standalone server that receives files over a socket,
+# scans them using the ClamAV command-line tool, and returns a
+# simple result (OK, INFECTED, or ERROR).
+
 import socket
 import tempfile
 import os
@@ -6,26 +11,38 @@ import sys
 import subprocess
 
 # --- Configuration ---
-HOST = '0.0.0.0'  # Listen on all interfaces
-PORT = 12067      # Port for FTP client to connect
-BUFFER_SIZE = 4096
+# Global settings for the server.
+HOST = '0.0.0.0'  # Listen on all available network interfaces.
+PORT = 12067      # The port this server will listen on.
+BUFFER_SIZE = 4096 # Size of chunks for receiving file data.
 
 
 
 def get_clamscan_path():
-    """Return the path to clamscan based on OS."""
+    """
+    Determines the correct path to the ClamAV scanner executable based on the
+    operating system (Windows or Linux).
+    """
     if sys.platform.startswith('win'):
         # return r"C:\\Program Files (x86)\\clam\\clam\\clamscan.exe"
+        # Standard installation path for ClamAV on Windows.
         return r"C:\\Program Files\\ClamAV\\clamscan.exe"
     elif sys.platform.startswith('linux'):
+        # Path for the ClamAV daemon scanner on Linux, which is often faster.
         return '/usr/bin/clamdscan'
     else:
+        # Exit if the OS is not supported.
         print(f"[SERVER ERROR] Unsupported OS: {sys.platform}")
         sys.exit(1)
 
 def scan_with_clamscan(file_path):
-    """Scan file with clamscan subprocess and return result string."""
+    """
+    Scans a given file using the ClamAV executable in a separate process.
+
+    Returns a simple string indicating the scan result ('OK', 'INFECTED', 'SCAN_ERROR').
+    """
     clamscan_path = get_clamscan_path()
+    # Ensure the clamscan executable exists and is runnable.
     if not os.path.exists(clamscan_path):
         print(f"[SERVER ERROR] Clamscan not found at '{clamscan_path}'.")
         sys.exit(1)
@@ -33,6 +50,7 @@ def scan_with_clamscan(file_path):
         print(f"[SERVER ERROR] Clamscan at '{clamscan_path}' is not executable.")
         sys.exit(1)
     try:
+        # Execute the scanner with arguments for clean, machine-readable output.
         result = subprocess.run([
             clamscan_path,
             "--stdout",
@@ -43,6 +61,11 @@ def scan_with_clamscan(file_path):
             "--max-scansize=100M",
             file_path
         ], capture_output=True, text=True, timeout=300)
+
+        # Interpret the exit code from the scanner.
+        # 1 = File is infected.
+        # 0 = File is clean.
+        # Other = An error occurred during the scan.
         if result.returncode == 1:
             return "INFECTED"
         elif result.returncode == 0:
@@ -51,15 +74,19 @@ def scan_with_clamscan(file_path):
             print(f"[SERVER ERROR] ClamAV error (code {result.returncode})")
             return "SCAN_ERROR:ClamAVError"
     except Exception as e:
+        # Catch any other exceptions, like a timeout.
         print(f"[SERVER ERROR] Exception during clamscan: {e}")
         return f"SCAN_ERROR:ClamAVException_{e}"
 
 def handle_client(conn, addr):
-    """Handle a single client connection."""
+    """
+    Manages the entire communication with a single connected client.
+    It follows a simple protocol to receive the file, scan it, and send a result.
+    """
     print(f"[SERVER] Connection established with client: {addr}")
     tmp_path = None
     try:
-        # Receive file name length (4 bytes)
+        # --- Protocol Step 1: Receive file name ---
         name_len_bytes = conn.recv(4)
         if not name_len_bytes:
             print("[SERVER] Client disconnected during file name length reception.")
@@ -67,7 +94,6 @@ def handle_client(conn, addr):
             return
         name_len = int.from_bytes(name_len_bytes, 'big')
 
-        # Receive file name
         file_name_bytes = conn.recv(name_len)
         if not file_name_bytes:
             print("[SERVER] Client disconnected during file name reception.")
@@ -75,7 +101,7 @@ def handle_client(conn, addr):
             return
         file_name = file_name_bytes.decode('utf-8')
 
-        # Receive file size (8 bytes)
+        # --- Protocol Step 2: Receive file size ---
         file_size_bytes = conn.recv(8)
         if not file_size_bytes:
             print("[SERVER] Client disconnected during file size reception.")
@@ -83,7 +109,7 @@ def handle_client(conn, addr):
             return
         file_size = int.from_bytes(file_size_bytes, 'big')
 
-        # Save to temporary file
+        # --- Protocol Step 3: Receive file content and save to a temporary file ---
         with tempfile.NamedTemporaryFile(delete=False, dir=tempfile.gettempdir(),
                                          prefix="clamscan_server_", suffix=f"_{file_name}") as tmp_f:
             tmp_path = tmp_f.name
@@ -98,14 +124,15 @@ def handle_client(conn, addr):
 
         print(f"[SERVER] File '{file_name}' ({file_size} bytes) saved to {tmp_path}")
 
-        # Set permissions (Linux only)
+        # Set file permissions to be safe (Linux/macOS only).
         if not sys.platform.startswith('win'):
             os.chmod(tmp_path, 0o644)
             print(f"[SERVER] Set permissions for {tmp_path} to 0o644.")
 
-        # Scan the file
+        # --- Step 4: Scan the file ---
         result_string = scan_with_clamscan(tmp_path)
 
+        # --- Step 5: Send the result back to the client ---
         print(f"[SERVER] Sending scan result to client: '{result_string}'")
         conn.sendall(result_string.encode('utf-8'))
 
@@ -114,7 +141,8 @@ def handle_client(conn, addr):
     except Exception as e:
         print(f"[SERVER ERROR] Unexpected error: {e}")
     finally:
-        # Always clean up temp file
+        # --- Cleanup ---
+        # Ensure the temporary file is deleted, even if errors occurred.
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
             print(f"[SERVER] Cleaned up temporary file: {tmp_path}")
@@ -127,6 +155,7 @@ if __name__ == '__main__':
         server.listen(1)
         print(f"[SERVER] ClamAV scanning agent listening for clients on port {PORT}...")
 
+        # Continuously accept new client connections.
         while True:
             conn, addr = server.accept()
             with conn:

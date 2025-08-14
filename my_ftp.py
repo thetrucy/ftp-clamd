@@ -1,3 +1,11 @@
+# my_ftp.py
+# A from-scratch implementation of an FTP client library. It handles the low-level
+# details of the FTP protocol.
+# Now supports:
+# - Both Passive (default) and Active data transfer modes.
+# - Progress tracking via callbacks for uploads and downloads.
+# - Custom exceptions for clear error handling.
+
 import socket
 import os
 import re
@@ -23,11 +31,12 @@ class FTPClient:
     def __init__(self, buffer_size=4096, timeout=10):
         self.control_sock = None
         self.data_sock = None
-        self.passive_mode = True
+        self.passive_mode = True # Default to Passive mode.
         self.binary_mode = True
         self.buffer_size = buffer_size
         self.timeout = timeout
         self.welcome_message = ""
+        # Socket for listening in Active Mode.
         self.active_server_sock = None
 
     def connect(self, host, port=21):
@@ -87,16 +96,20 @@ class FTPClient:
         return resp
 
     def enter_active_mode(self):
-        """Create a listening socket and send PORT command for Active Mode."""
+        """
+        Initializes a listening socket on the client side for Active Mode
+        and sends the PORT command to the server.
+        """
         self.active_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Bind vào IP của control connection và một cổng ngẫu nhiên (số 0)
+        # Bind to the same IP as the control connection, on a random free port (port 0).
         self.active_server_sock.bind((self.control_sock.getsockname()[0], 0))
         self.active_server_sock.listen(1)
 
         host, port = self.active_server_sock.getsockname()
 
         host_parts = host.split('.')
-        port_high, port_low = divmod(port, 256) # Chia cổng thành 2 byte
+        # Divide the port into high and low bytes for the PORT command.
+        port_high, port_low = divmod(port, 256)
 
         port_cmd = f"PORT {','.join(host_parts)},{port_high},{port_low}"
         self._send_command(port_cmd)
@@ -106,7 +119,7 @@ class FTPClient:
         """Switch to passive mode and open data socket."""
         self._send_command('PASV')
         resp = self._get_response()
-        # Extract host and port from reply
+        # Parse the host and port from the server's PASV response.
         match = re.search(r'\((\d+,\d+,\d+,\d+),(\d+),(\d+)\)', resp)
         if not match:
             raise FTPError(f"Failed to parse PASV response: {resp}")
@@ -117,7 +130,6 @@ class FTPClient:
         data_host = '.'.join(host_parts)
         data_port = (p1 * 256) + p2
         self.data_sock = socket.create_connection((data_host, data_port), timeout=self.timeout)
-        # return resp
 
     def set_pasv(self, value):
         """Enable or disable passive mode."""
@@ -126,7 +138,7 @@ class FTPClient:
         self.passive_mode = value
 
     def set_binary_mode(self, binary: bool): # To set global transfer mode
-        """Sets the global transfer mode (binary or ASCII) for subsequent operations."""
+        """Sets the global transfer mode (binary or ASCII) for subsequent operations by sending the TYPE command."""
         if not self.control_sock:
             raise FTPConnectError("Not connected to any FTP server.")
         self.binary_mode = binary
@@ -136,21 +148,24 @@ class FTPClient:
         print(f"Transfer mode set to: {'BINARY' if self.binary_mode else 'ASCII'} on server.")
    
     def nlst(self, path=''):
-        """List names using NLST."""
+        """List names using NLST, supporting both Active and Passive modes."""
+        # Step 1: Establish the data connection based on the current mode.
         if self.passive_mode:
             self.enter_passive_mode()
         else:
             self.enter_active_mode()
 
+        # Step 2: Send the NLST command.
         self._send_command(f'NLST {path}')
         resp = self._get_response() # Initial response (e.g., "150 Here comes the directory listing.")
 
-        # Accept connection if in active mode
+        # Step 3: In Active mode, accept the incoming connection from the server.
         if not self.passive_mode:
             self.data_sock, _ = self.active_server_sock.accept()
             self.active_server_sock.close()
             self.active_server_sock = None
 
+        # Step 4: Receive all data from the data socket.
         data = b''
         while True:
             chunk = self.data_sock.recv(self.buffer_size)
@@ -158,6 +173,8 @@ class FTPClient:
                 break
             data += chunk
         self.data_sock.close()
+
+        # Step 5: Get the final confirmation from the server.
         self._get_response() # Final response (e.g., "226 Directory send OK.")
         
         # Decode and split into a list, filtering out empty lines
@@ -179,7 +196,7 @@ class FTPClient:
         return "Unknown" # Fallback
 
     def retr(self, remote_file, local_path, binary=True, callback = None):
-        """Download remote_file to local_path."""
+        """Download remote_file to local_path (RETR command)."""
         if self.passive_mode:
             self.enter_passive_mode()
         else:
@@ -197,18 +214,20 @@ class FTPClient:
             self.active_server_sock.close()
             self.active_server_sock = None
 
+        # Read from the data socket and write to the local file.
         with open(local_path, 'wb' if binary else 'w', encoding=None if binary else 'utf-8') as f:
             while True:
                 chunk = self.data_sock.recv(self.buffer_size)
                 if not chunk:
                     break
                 f.write(chunk)
+                # If a callback is provided, call it with the chunk of data.
                 if callback: callback(chunk) # update progress bar
         self.data_sock.close()
         return self._get_response()
 
     def stor(self, local_path, remote_path=None, binary=True, callback = None):
-        """Upload local_file to server as remote_path (or basename if not specified)."""
+        """Upload local_file to server as remote_path (or basename if not specified) (STOR command)."""
         filename = os.path.basename(local_path) if remote_path is None else remote_path
         if self.passive_mode:
             self.enter_passive_mode()
@@ -227,31 +246,37 @@ class FTPClient:
             self.active_server_sock.close()
             self.active_server_sock = None
         
+        # Read the local file in chunks and send them over the data socket.
         with open(local_path, 'rb' if binary else 'r', encoding=None if binary else 'utf-8') as f:
             while True:
                 chunk = f.read(self.buffer_size)
                 if not chunk:
                     break
-                # if chunk is string type, encode it to bytes before sending
+                # Ensure data is bytes before sending (for text mode).
                 data_to_send = chunk if binary else chunk.encode('utf-8')
                 self.data_sock.sendall(data_to_send)
+                # If a callback is provided, call it to update progress.
                 if callback: callback(data_to_send) # update progress bar
         self.data_sock.close()
         return self._get_response()
     
     def mkd(self, dirname):
+        """Creates a directory."""
         self._send_command(f'MKD {dirname}')
         return self._get_response()
 
     def rmd(self, dirname):
+        """Removes a directory."""
         self._send_command(f'RMD {dirname}')
         return self._get_response()
 
     def delete(self, filename):
+        """Deletes a file."""
         self._send_command(f'DELE {filename}')
         return self._get_response()
 
     def rename(self, old_name, new_name):
+        """Renames a file."""
         self._send_command(f'RNFR {old_name}')
         self._get_response()
         self._send_command(f'RNTO {new_name}')
@@ -276,10 +301,10 @@ class FTPClient:
                 self.control_sock.close()
                 self.control_sock = None
     def size(self, filename):
-        """Get the size of a file on the server."""
+        """Get the size of a file on the server using the SIZE command."""
         self._send_command(f'SIZE {filename}')
         resp = self._get_response()
-        # Common response is "213 <size>"
+        # The standard success response is "213 <size_in_bytes>".
         if resp.startswith('213'):
             return int(resp.split()[1])
         return 0
