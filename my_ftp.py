@@ -37,6 +37,7 @@ class FTPClient:
         self.buffer_size = buffer_size
         self.timeout = timeout
         self.welcome_message = ""
+        self.active_server_sock = None
 
     def connect(self, host, port=21):
         """Establishes the initial control connection to the FTP server."""
@@ -101,6 +102,22 @@ class FTPClient:
         self._send_command(f"PASS {password}")
         resp = self._get_response() # Final login response (e.g., '230 Login successful.')
         return resp
+
+    def enter_active_mode(self):
+        """Create a listening socket and send PORT command for Active Mode."""
+        self.active_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Bind vào IP của control connection và một cổng ngẫu nhiên (số 0)
+        self.active_server_sock.bind((self.control_sock.getsockname()[0], 0))
+        self.active_server_sock.listen(1)
+
+        host, port = self.active_server_sock.getsockname()
+
+        host_parts = host.split('.')
+        port_high, port_low = divmod(port, 256) # Chia cổng thành 2 byte
+
+        port_cmd = f"PORT {','.join(host_parts)},{port_high},{port_low}"
+        self._send_command(port_cmd)
+        self._get_response()
 
     def enter_passive_mode(self):
         """
@@ -190,6 +207,8 @@ class FTPClient:
         """Downloads a file from the server (RETR command)."""
         if self.passive_mode:
             self.enter_passive_mode()
+        else:
+            self.enter_active_mode()
         
         # Set the transfer type for this specific operation.
         self._send_command(f"TYPE {'I' if binary else 'A'}")
@@ -205,6 +224,7 @@ class FTPClient:
                 if not chunk:
                     break
                 f.write(chunk)
+                if callback: callback(chunk) # update progress bar
         self.data_sock.close()
         return self._get_response()
 
@@ -213,6 +233,8 @@ class FTPClient:
         filename = os.path.basename(local_path) if remote_path is None else remote_path
         if self.passive_mode:
             self.enter_passive_mode()
+        else:
+            self.enter_active_mode()
 
         self._send_command(f"TYPE {'I' if binary else 'A'}")
         self._get_response()
