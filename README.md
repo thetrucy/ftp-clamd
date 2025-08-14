@@ -1,12 +1,12 @@
 # Secure FTP via Clamscan
 
-A Python-based FTP client with integrated ClamAV anti-virus scanning. This tool ensures that all files are scanned for viruses by a ClamAV agent before they are uploaded to the FTP server, providing an extra layer of security for your file transfers.
+A Python-based FTP client with integrated ClamAV anti-virus scanning. This tool ensures that all files are scanned for viruses by a ClamAV agent before they are uploaded to the FTP server.
 
 It consists of two main components:
 
+  * `my_ftp.py`: A custom FTP library, built from the ground up using Python's socket module, that handles the core protocol commands and data transfers.
   * `ftp_client.py`: An interactive command-line FTP client.
   * `clamav_agent.py`: A server agent that receives files from the FTP client, scans them using ClamAV, and reports the result.
-  * `my_ftp.py`: A manual library that can function nearly same as standard FTP library.
 
 -----
 
