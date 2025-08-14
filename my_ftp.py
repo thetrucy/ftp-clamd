@@ -235,7 +235,7 @@ class FTPClient:
                 # if chunk is string type, encode it to bytes before sending
                 data_to_send = chunk if binary else chunk.encode('utf-8')
                 self.data_sock.sendall(data_to_send)
-                if callback: callback(chunk) # update progress bar
+                if callback: callback(data_to_send) # update progress bar
         self.data_sock.close()
         return self._get_response()
     
