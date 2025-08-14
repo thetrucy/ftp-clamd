@@ -157,23 +157,25 @@ ftp:/home/myuser>
 
 Here is a list of available commands, which can also be viewed by typing `help` in the client.
 
-| Command | Description | Example |
+| No. | Command | Expected Output |
 |---|---|---|
-| **`ls`** | Lists files and folders in the current remote directory. | `ftp:/home/myuser> ls` |
-| **`cd <dir>`** | Changes the directory on the FTP server. | `ftp:/home/myuser> cd public_html` |
-| **`pwd`** | Shows the current directory on the server. | `ftp:/home/myuser> pwd` |
-| **`lcd <dir>`** | Changes the current directory on your local machine. | `ftp> lcd C:\Users\Me\Documents` |
-| **`mkdir <dir>`**| Creates a new directory on the server. | `ftp:/home/myuser> mkdir new_folder` |
-| **`rmdir <dir>`**| Deletes a directory on the server. | `ftp:/home/myuser> rmdir old_folder` |
-| **`delete <file>`**| Deletes a file on the server. | `ftp:/home/myuser> delete old_file.txt` |
-| **`rename <old> <new>`**| Renames a file or directory on the server. | `ftp:/home/myuser> rename file.txt new_name.txt` |
-| **`put <local_file>`** | **Scans** a local file with the ClamAV agent and then uploads it. The upload is cancelled if a virus is found. | `ftp:/home/myuser> put "C:\\files\\upload.zip"` |
-| **`get <remote_file>`**| Downloads a single file from the server. | `ftp:/home/myuser> get important_document.docx` |
-| **`mput`** | Uploads multiple files from a local directory, with an option for recursive upload. Each file is scanned. | `ftp:/home/myuser> mput` |
-| **`mget <remote_dir>`**| Downloads an entire directory recursively from the server. | `ftp:/home/myuser> mget my_project` |
-| **`passive <on/off>`**| Toggles FTP passive mode. | `ftp:/home/myuser> passive on` |
-| **`binary` / `ascii`** | Sets the file transfer mode to binary (for files) or ASCII (for text). | `ftp:/home/myuser> binary` |
-| **`status`** | Shows the current connection status, transfer mode, and ClamAV agent configuration. | `ftp:/home/myuser> status` |
-| **`set_clamav_agent`**| Allows you to change the host and port for the ClamAV agent. | `ftp:/home/myuser> set_clamav_agent` |
-| **`close`** | Disconnects from the FTP server. | `ftp:/home/myuser> close` |
-| **`quit` / `bye`**| Disconnects and exits the FTP client. | `ftp:/home/myuser> quit` |
+| 1 | **`ls`** | Displays a list of files and folders in the server’s current directory. |
+| 2 | **`cd <dir>`** | Changes the current folder on the server and shows a success notification. |
+| 3 | **`pwd`** | Shows the current directory path on the server. |
+| 4 | **`lcd <dir>`** | Displays the current local directory and allows changing it. |
+| 5 | **`mkdir <dir>`**, **`rmdir <dir>`** | Creates or removes a folder on the server and shows a success notification. |
+| 6 | **`delete <file>`** | Deletes a file in the server’s current directory and shows a success notification. |
+| 7 | **`rename <old> <new>`** | Renames a file or folder on the server and shows a success notification. |
+| 8 | **`get <remote_file>`**, **`recv <remote_file>`** | Downloads a file from the server to the local machine, with a progress bar and notifications. |
+| 9 | **`put <local_file>`** | Uploads a file from the local machine to the server after ClamAV scanning, with a progress bar and notifications. |
+| 10 | **`mput`** | Uploads multiple files, scanning each one and asking for confirmation if prompts are enabled. |
+| 11 | **`mget <remote_dir>`** | Downloads multiple files from the server, scanning each before download, and asks for confirmation if prompts are enabled. |
+| 12 | **`prompt`** | Toggles confirmation prompts for each file during `put` or `get` operations. |
+| 13 | **`ascii`**, **`binary`** | Switches the file transfer mode between ASCII (text) and binary (files). |
+| 14 | **`status`** | Displays current connection status, transfer mode, and ClamAV agent configuration. |
+| 15 | **`passive <on/off>`** | Toggles passive mode for FTP connections and shows a status message. |
+| 16 | **`open`** | Connects to the FTP server and shows success or failure notification. |
+| 17 | **`close`** | Disconnects from the server and sends a goodbye message. |
+| 18 | **`quit`**, **`bye`** | Exits the client, disconnects from the server, and sends a goodbye message. |
+| 19 | **`help`**, **`?`** | Displays the list of available commands. |
+| 20 | **`set_clamav_agent`** | Allows configuring the ClamAV agent’s host and port. |
