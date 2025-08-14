@@ -70,7 +70,7 @@ class FTPClient:
         """Display a simple progress bar."""
         if total <= 0:
             percent = 100
-            print(f'\r{prefix}: {current} bytes downloaded...', end="", flush=True)
+            print(f'\r{prefix}: {current} bytes processed...', end="", flush=True)
             return
         
         percent = min(100.0, (current / total) * 100)
@@ -114,7 +114,11 @@ class FTPClient:
                             break
                         s.sendall(data)
                         sent_bytes += len(data)
-                        #FTPClient.show_progress_bar(sent_bytes, file_size, "Scan")
+                        FTPClient.show_progress_bar(sent_bytes, file_size, "Scan")
+                
+                if sent_bytes > 0:
+                    print() 
+                print("⏳ Waiting for scan result...")
                 
                 # Receive scan result
                 result = s.recv(1024).decode('utf-8').strip()
