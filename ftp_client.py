@@ -68,16 +68,17 @@ class FTPClient:
     @staticmethod
     def show_progress_bar(current, total, prefix="Progress", length=40):
         """Display a simple progress bar."""
-        if total == 0:
+        if total <= 0:
             percent = 100
-        else:
-            percent = (current / total) * 100
+            print(f'\r{prefix}: {current} bytes downloaded...', end="", flush=True)
+            return
         
-        filled_length = int(length * current // total) if total > 0 else length
+        percent = min(100.0, (current / total) * 100)
+        display_current = min(current, total)
+        filled_length = int(length * display_current // total)
         bar = '█' * filled_length + '-' * (length - filled_length)
         
-        sys.stdout.write(f'\r{prefix}: |{bar}| {percent:.1f}% ({current}/{total})')
-        sys.stdout.flush()
+        print(f'\r{prefix}: |{bar}| {percent:.1f}% ({current}/{total} bytes)', end="", flush=True)
         
         if current >= total:
             print()
