@@ -6,6 +6,7 @@ It consists of two main components:
 
   * `ftp_client.py`: An interactive command-line FTP client.
   * `clamav_agent.py`: A server agent that receives files from the FTP client, scans them using ClamAV, and reports the result.
+  * `my_ftp.py`: A manual library that can function nearly same as standard FTP library.
 
 -----
 
