@@ -110,7 +110,7 @@ The `clamav_agent.py` script requires `clamdscan` (on Linux) or `clamscan.exe` (
 1.  **Clone the Repository:**
 
     ```bash
-    git clone (https://github.com/thetrucy/ftp-clamd)
+    git clone https://github.com/thetrucy/ftp-clamd
     cd ftp-clamd
     ```
 
