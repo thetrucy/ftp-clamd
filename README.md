@@ -184,7 +184,7 @@ Here is a list of available commands, which can also be viewed by typing `help` 
 | 13 | **`ascii`**, **`binary`** | Switches the file transfer mode between ASCII (text) and binary (files). |
 | 14 | **`status`** | Displays current connection status, transfer mode, and ClamAV agent configuration. |
 | 15 | **`passive <on/off>`** | Toggles passive mode for FTP connections and shows a status message. |
-| 16 | **`open`** | Connects to the FTP server and shows success or failure notification. |
+| 16 | **`open <host> <port> <username> <password>`** | Connects to the FTP server and shows success or failure notification. |
 | 17 | **`close`** | Disconnects from the server and sends a goodbye message. |
 | 18 | **`quit`**, **`bye`** | Exits the client, disconnects from the server, and sends a goodbye message. |
 | 19 | **`help`**, **`?`** | Displays the list of available commands. |
